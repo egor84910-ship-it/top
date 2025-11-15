@@ -254,22 +254,42 @@
     </form>
   </div>
 
-  <script src="telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
-function sendUserInfo() {
-  if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe) {
-    const username = Telegram.WebApp.initDataUnsafe.user?.username || "";
-    const tg_id = Telegram.WebApp.initDataUnsafe.user?.id || "";
-    if (username || tg_id) {
-      fetch("/user_info", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({tg_username: username, tg_id: tg_id})
-      });
+// Ждём загрузки Telegram WebApp API
+window.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM loaded');
+  
+  // Проверяем доступность Telegram API
+  if (!window.Telegram || !window.Telegram.WebApp) {
+    console.error('Telegram WebApp API not available');
+    return;
+  }
+  
+  console.log('Telegram WebApp initialized:', Telegram.WebApp);
+  
+  // Уведомляем Telegram что приложение готово
+  Telegram.WebApp.ready();
+  
+  function sendUserInfo() {
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe) {
+      const username = Telegram.WebApp.initDataUnsafe.user?.username || "";
+      const tg_id = Telegram.WebApp.initDataUnsafe.user?.id || "";
+      console.log('User info:', {username, tg_id});
+      if (username || tg_id) {
+        fetch("/user_info", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({tg_username: username, tg_id: tg_id})
+        }).then(response => {
+          console.log('User info sent:', response.status);
+        }).catch(error => {
+          console.error('Error sending user info:', error);
+        });
+      }
     }
   }
-}
-sendUserInfo();
+  sendUserInfo();
 
 function updateCode() {
   const select = document.getElementById("country");
